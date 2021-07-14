@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:orientation="vertical"
+    android:id="@+id/item"
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:padding="10dp"
+        android:gravity="center_vertical"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_centerVertical="true"
+            android:layout_width="match_parent"
+            android:layout_marginRight="60dp"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/tv_name"
+                android:text=""
+                android:textStyle="bold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            </TextView>
+            <ProgressBar
+
+                android:layout_marginTop="20dp"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:text=""
+                android:id="@+id/ProgressBar"
+                android:max="100"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            </ProgressBar>
+
+        </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/tv_selected"
+            android:text="安装"
+            android:layout_alignParentRight="true"
+            android:layout_width="wrap_content"
+            android:paddingLeft="20dp"
+            android:textStyle="bold"
+            android:textSize="20sp"
+
+            android:layout_centerVertical="true"
+            android:layout_height="wrap_content">
+        </TextView>
+
+    </RelativeLayout>
+
+
+
+</LinearLayout>
