@@ -1,15 +1,13 @@
 package cn.hc.downloadmanger
 
 import android.content.Context
-import android.content.Intent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import cn.hc.downloadmanger.manger.DownLoadApkListener
-import cn.lanru.lrapplication.module.utils.manger.DownLoadMangerUtils
+import cn.lanru.lrapplication.module.utils.manger.DownloadManagerUtils
 
 /**
  * @ClassName: ControlAdapter
@@ -39,7 +37,7 @@ class ApplicationAdapter : RecyclerView.Adapter<ApplicationAdapter.MyHolder>, Do
     constructor(mContext: Context, list: ArrayList<ApkBean>):super(){
         this.mContext = mContext
         this.list = list
-        DownLoadMangerUtils.getInstance().setDownLoadApkListener(this)
+        DownloadManagerUtils.setDownLoadApkListener(this)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyHolder {
@@ -60,7 +58,7 @@ class ApplicationAdapter : RecyclerView.Adapter<ApplicationAdapter.MyHolder>, Do
         holder.tv_selected.setOnClickListener {
 
             var tag = it.tag.toString().toInt()
-            DownLoadMangerUtils.getInstance().downLoad(list!![tag].name,list!![tag].name,list!![tag].url)
+            DownloadManagerUtils().downLoad(list!![tag].name,list!![tag].name,list!![tag].url)
         }
     }
 
