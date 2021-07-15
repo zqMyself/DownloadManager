@@ -16,6 +16,7 @@ import cn.hc.downloadmanger.MyApplication
 import cn.hc.downloadmanger.SPUtils
 import cn.hc.downloadmanger.manger.DownLoadApkListener
 import java.io.File
+import java.text.DecimalFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -36,13 +37,38 @@ class DownloadManagerUtils {
     var timer : Timer?=null
     companion object
     {
-        var listenerList = ArrayList<DownLoadApkListener>()
+        private var listenerList = ArrayList<DownLoadApkListener>()
         fun setDownLoadApkListener(downLoadApkListener:DownLoadApkListener){
             listenerList.add(downLoadApkListener)
         }
 
         fun removeDownLoadApkListener(downLoadApkListener:DownLoadApkListener){
             listenerList.remove(downLoadApkListener)
+        }
+
+        fun downLoad(title:String,description:String,downLoadHtmlUrl:String){
+
+        }
+
+        fun getDataSize(size: Long): String? {
+            var GB = 1024 * 1024 * 1024;//定义GB的计算常量
+            var MB = 1024 * 1024;//定义MB的计算常量
+            var KB = 1024;//定义KB的计算常量
+            var  df = DecimalFormat("0.00");//格式化小数
+            var resultSize = "";
+            if (size / GB >= 1) {
+                //如果当前Byte的值大于等于1GB
+                resultSize = df.format(size /  GB.toFloat()) + "GB";
+            } else if (size / MB >= 1) {
+                //如果当前Byte的值大于等于1MB
+                resultSize = df.format(size /  MB.toFloat()) + "MB";
+            } else if (size / KB >= 1) {
+                //如果当前Byte的值大于等于1KB
+                resultSize = df.format(size / KB.toFloat()) + "KB";
+            } else {
+                resultSize =  "$size B";
+            }
+            return resultSize;
         }
     }
 
@@ -61,10 +87,7 @@ class DownloadManagerUtils {
 
     fun downLoad(title:String,description:String,downLoadHtmlUrl:String){
         this.url = downLoadHtmlUrl
-        if (SPUtils.getInstance().contains(url)){
-            return
-        }
-        SPUtils.getInstance().put(url,url)
+
         var uri = Uri.parse(downLoadHtmlUrl)
         val request = DownloadManager.Request(uri)
         //设置漫游条件下是否可以下载
@@ -81,15 +104,24 @@ class DownloadManagerUtils {
         val apkName: String = downLoadHtmlUrl.substring(index + 1, downLoadHtmlUrl.length)
         //设置文件存放路径
         val directory = getDiskCacheDir(MyApplication.context!!)
+
         val file = File(directory, "/download/$apkName")
+
         request.setDestinationUri(Uri.fromFile(file))
+
         if (downloadManager == null)
             downloadManager = MyApplication.context!!.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         //将下载请求加入下载队列，加入下载队列后会给该任务返回一个long型的id，通过该id可以取消任务，重启任务、获取下载的文件等等
         if (downloadManager != null) {
             var id = downloadManager!!.enqueue(request)
             this.id = id
-            startTimer()
+            if (SPUtils.spUtils.contains(url)){
+                checkStatus(id)
+            }else {
+                SPUtils.spUtils.put(url,id)
+                startTimer()
+            }
+
         }
 
     }
@@ -102,7 +134,7 @@ class DownloadManagerUtils {
                 override fun run() {
                     checkStatus(id)
                 }
-            }, 1000, 1000)
+            }, 100, 100)
         }
     }
 
@@ -123,6 +155,13 @@ class DownloadManagerUtils {
         query.setFilterById(id)
         var cursor: Cursor?=null
         cursor = downloadManager!!.query(query)
+        if (cursor == null) {
+            notifyListener( DownloadManager.STATUS_FAILED, 100)
+            if (timer !=null)
+                timer!!.cancel()
+            SPUtils.spUtils.remove(url)
+            return
+        }
         if (cursor.moveToFirst()) {
             val status: Int = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
 
@@ -132,10 +171,8 @@ class DownloadManagerUtils {
                 }
                 DownloadManager.STATUS_PENDING -> {
                     Log.e("tag","STATUS_PENDING +" + DownloadManager.STATUS_PENDING)
-//                    checkStatus(id)
 
-//                    notifyListener(id, DownloadManager.STATUS_PENDING, 0)
-
+                    startTimer()
                 }
                 DownloadManager.STATUS_RUNNING -> {
 
@@ -159,17 +196,20 @@ class DownloadManagerUtils {
                     } else {
                         name = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_FILENAME))
                     }
-                    if (timer !=null)
+                    if (timer !=null) {
                         timer!!.cancel()
-                    SPUtils.getInstance().remove(url)
+                    }
                     //下载完成
                     cursor.close()
+                    SPUtils.spUtils.remove(url)
                     Log.e("tag","STATUS_SUCCESSFUL +" + DownloadManager.STATUS_SUCCESSFUL +",id="+id)
                     installApk(File(name))
                 }
                 DownloadManager.STATUS_FAILED -> {
                     Log.e("tag","STATUS_FAILED +" + DownloadManager.STATUS_FAILED)
-
+                    if (timer !=null) {
+                        timer!!.cancel()
+                    }
                     cursor.close()
                 }
 
